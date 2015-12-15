@@ -4,11 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
+
+using System.Threading; //thread
+using System.Runtime.Remoting.Messaging;//AsyncResult
+
 namespace Delegate
 {
     public static partial  class Delegate
     {
-        #region  Delegate Definition & Introduce Part
+        #region part 1  Delegate Definition & Introduce Part
         /*
          * 委托是C#最为常见的内容。与类、枚举、结构、接口一样，委托也是一种类型，类是对象的抽象，而委托可以看成是函数的抽象。
          * 一个委托代表了具有相同参数列表和返回值的所有函数。
@@ -61,5 +66,92 @@ namespace Delegate
         //todo: 委托作为返回值
 
         #endregion
+
+        //todo:  
+
+        #region part 2  Demo ： AsynChronous  with Delegate
+
+        /*****************************
+         * 生活中简单的例子
+         * 1.小明在烧水，等水烧开后，将开水灌入开水瓶，然后整理家务。
+         * 2.小文在烧水，在烧水的过程中整理家务，等水烧开后，放下手中的家务活，将开水贯入开水瓶，然后继续整理家务。
+         * 这是日常生活中很常见的情形，小文的办事效率明显要高于小明，
+         * 从C#程序执行的角度考虑，小明使用的是同步处理方式，小文则使用的是异步处理方式。
+         * 同步： 事务是按照顺序一件一件处理；而异步：将子操作从住操作中分离出来，主操作继续进行，子操作在完成处理的时候通知主操作。
+         * ******/
+
+
+
+       public static TimeSpan Boil()
+       {
+           Console.WriteLine("水壶：开始烧水.....");
+           Thread.Sleep(6000);
+           Console.WriteLine("水壶：水已经烧开!");
+           return TimeSpan.MinValue;
+       }
+
+       public static TimeSpan BoilUpdate()
+       {
+           DateTime begin = DateTime.Now;
+           Console.WriteLine("修改后 水壶：开始烧水。。。");
+           Thread.Sleep(6000);
+           Console.WriteLine("修改后 水壶：水已经烧开！");
+           return DateTime.Now - begin;
+       }
+
+       public delegate TimeSpan BoilingDelegate();
+
+       public static void BoilingFinishedCallBack(IAsyncResult result)
+       {
+           AsyncResult asyncResult = (AsyncResult)result;
+           //为了得到委托实例以便获取异步处理函数的返回值，采取以下转换，这样才能获得调用异步函数的委托的实体
+           BoilingDelegate del = (BoilingDelegate)asyncResult.AsyncDelegate;
+           del.EndInvoke(result);// EndInvoke会使得调用线程阻塞，直到异步函数处理完成，显然紧接着BeginInvoke 后面的EndInvoke的使用方法与使用同步方法等价
+           Console.WriteLine("小文：将热水灌倒热水瓶");
+           Console.WriteLine("小文：继续整理家务");
+
+       }
+
+       public static void BoilingFinishedCallBackUpdate(IAsyncResult result)
+       {
+           AsyncResult asyncResult = (AsyncResult)result;
+           //为了得到委托实例以便获取异步处理函数的返回值，采取以下转换，这样才能获得调用异步函数的委托的实体
+           BoilingDelegate del = (BoilingDelegate)asyncResult.AsyncDelegate;
+           Console.WriteLine("修改后 烧水一共用去{0}时间", del.EndInvoke(result));
+           Console.WriteLine("修改后 小文：将热水灌倒热水瓶");
+           Console.WriteLine("修改后 小文：继续整理家务");
+       }
+
+
+        #endregion
+
+
+        #region part 3 MyRegion
+
+       public  delegate void MethodInvoker();
+
+       public static void Foo()
+       {
+           int intAvailableThreads, intAvailableAsyncThreads;
+           ThreadPool.GetAvailableThreads(out intAvailableThreads, out intAvailableAsyncThreads);
+           string strMessage = string.Format(@"Is Thread Pool:{0};Thread ID {1} Free Thread {2}", Thread.CurrentThread.IsThreadPoolThread.ToString(), Thread.CurrentThread.GetHashCode(), intAvailableThreads);
+           Console.WriteLine(strMessage);
+           Thread.Sleep(10000);
+           return;
+       }
+
+       public static void CallFoo()
+       {
+           MethodInvoker simpleDelegate = new MethodInvoker(Foo);
+           //MethodInvoker simpleDelegate = Foo;
+           for (int i = 0; i < 15; i++)
+           {
+               simpleDelegate.BeginInvoke(null, null);
+
+           }
+       }
+        #endregion
+
+
     }
 }
