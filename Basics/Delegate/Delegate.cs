@@ -13,6 +13,11 @@ namespace Delegate
 {
     public static partial  class Delegate
     {
+
+    
+
+
+
         #region part 1  Delegate Definition & Introduce Part
         /*
          * 委托是C#最为常见的内容。与类、枚举、结构、接口一样，委托也是一种类型，类是对象的抽象，而委托可以看成是函数的抽象。
